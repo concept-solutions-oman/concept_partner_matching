@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_matching_list" model="ir.ui.view">
+        <field name="name">partner.matching.list</field>
+        <field name="model">partner.matching</field>
+        <field name="arch" type="xml">
+            <tree string="Partner Matching History">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="total_selected_invoices" sum="Total Invoices"/>
+                <field name="total_selected_bills" sum="Total Bills"/>
+                <field name="state" widget="badge" 
+                       decoration-success="state == 'matched'" 
+                       decoration-info="state == 'draft'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_partner_matching_form" model="ir.ui.view">
+        <field name="name">partner.matching.form</field>
+        <field name="model">partner.matching</field>
+        <field name="arch" type="xml">
+            <form string="Partner Matching">
+                <header>
+                    <button name="action_refresh" string="Refresh" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_match_records" string="Match &amp; Reconcile" type="object" class="oe_highlight" 
+                            invisible="state != 'draft'"
+                            confirm="Are you sure you want to create a netting journal entry for the selected items?"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,matched"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id" options="{'no_create': True}" readonly="state != 'draft'"/>
+                            <field name="date" readonly="state != 'draft'"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="netting_move_id" invisible="not netting_move_id"/>
+                            <field name="opening_balance" invisible="not partner_id"/>
+                            <!-- Hidden stores for selection persistence -->
+                            <field name="selected_invoice_ids" widget="many2many_tags" invisible="1"/>
+                            <field name="selected_bill_ids" widget="many2many_tags" invisible="1"/>
+                        </group>
+                    </group>
+                    
+                    <div class="row mt-4">
+                        <!-- VENDOR BILLS SECTION -->
+                        <div class="col-6" style="border-right: 1px solid #dee2e6;">
+                            <h3 class="text-start mb-3">Vendor Bills</h3>
+                            <field name="line_bill_ids" mode="tree" readonly="state != 'draft'">
+                                <tree editable="bottom" create="true" delete="true">
+                                    <field name="is_selected"/>
+                                    <field name="move_id" string="Bill #" force_save="1" invisible="not move_id"/>
+                                    <field name="manual_ref" string="Manual Ref" invisible="move_id != False"/>
+                                    <field name="invoice_date" string="Date" force_save="1" readonly="move_id != False"/>
+                                    <field name="amount_total" string="Total" sum="List Total" force_save="1" readonly="move_id != False"/>
+                                    <field name="amount_residual" string="Due Amount" sum="List Due Total" force_save="1" readonly="move_id != False"/>
+                                    <field name="manual_amount" string="Matching Amount" sum="Matching Total"/>
+                                    <field name="payment_state" widget="badge" force_save="1"
+                                           invisible="not move_id"
+                                           decoration-success="payment_state == 'paid'" 
+                                           decoration-info="payment_state in ('not_paid', 'partial', 'in_payment')"/>
+                                </tree>
+                            </field>
+                            <group class="oe_right" invisible="not line_bill_ids">
+                                <field name="total_selected_bills" widget="monetary" options="{'currency_field': 'currency_id'}" 
+                                       style="font-size: 1.2em; font-weight: bold; color: #2c3e50;"/>
+                            </group>
+                        </div>
+
+                        <!-- CUSTOMER INVOICES SECTION -->
+                        <div class="col-6">
+                            <h3 class="text-start mb-3">Customer Invoices</h3>
+                            <field name="line_invoice_ids" mode="tree" readonly="state != 'draft'">
+                                <tree editable="bottom" create="true" delete="true">
+                                    <field name="is_selected"/>
+                                    <field name="move_id" string="Invoice #" force_save="1" invisible="not move_id"/>
+                                    <field name="manual_ref" string="Manual Ref" invisible="move_id != False"/>
+                                    <field name="invoice_date" string="Date" force_save="1" readonly="move_id != False"/>
+                                    <field name="amount_total" string="Total" sum="List Total" force_save="1" readonly="move_id != False"/>
+                                    <field name="amount_residual" string="Due Amount" sum="List Due Total" force_save="1" readonly="move_id != False"/>
+                                    <field name="manual_amount" string="Matching Amount" sum="Matching Total"/>
+                                    <field name="payment_state" widget="badge" force_save="1"
+                                           invisible="not move_id"
+                                           decoration-success="payment_state == 'paid'" 
+                                           decoration-info="payment_state in ('not_paid', 'partial', 'in_payment')"/>
+                                </tree>
+                            </field>
+                            <group class="oe_right" invisible="not line_invoice_ids">
+                                <field name="total_selected_invoices" widget="monetary" options="{'currency_field': 'currency_id'}" 
+                                       style="font-size: 1.2em; font-weight: bold; color: #2c3e50;"/>
+                            </group>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_partner_matching" model="ir.actions.act_window">
+        <field name="name">Partner Matching</field>
+        <field name="res_model">partner.matching</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Partner Matching session.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_partner_matching_root"
+              name="Nutting"
+              action="action_partner_matching"
+              parent="account.menu_finance_receivables"
+              sequence="100"/>
+</odoo>
