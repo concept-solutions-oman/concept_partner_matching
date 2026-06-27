@@ -15,9 +15,9 @@
         * Advanced filtering for vendor bills, receipts, and customer invoices.
         * Streamlined workflow for financial reconciliation in Odoo.
     """,
-    'author': 'Concept',
-    'website': 'https://www.example.com',
-    'support': 'support@example.com',
+    'author': 'Concept Solutions LLC',
+    'website': 'https://www.csloman.com',
+    'support': 'info@csloman.com',
     'depends': ['account'],
     'data': [
         'security/ir.model.access.csv',
